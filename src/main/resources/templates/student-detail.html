@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Detail</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 2rem 1rem; }
+        h1 { font-size: 1.6rem; margin-bottom: 1.5rem; }
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1); padding: 1.5rem; }
+        .field { display: flex; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .field:last-child { border-bottom: none; }
+        .field-label { width: 100px; font-weight: 600; color: #666; flex-shrink: 0; }
+        .field-value { flex: 1; }
+        .actions { margin-top: 1.5rem; display: flex; gap: 0.5rem; }
+        .btn { display: inline-flex; align-items: center; gap: 4px; padding: 8px 16px; border: none; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-decoration: none; color: #fff; transition: opacity .15s; }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: #4CAF50; }
+        .btn-danger { background: #e53935; }
+        .btn-secondary { background: #888; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Student Detail</h1>
+    <div class="card">
+        <div class="field">
+            <span class="field-label">ID</span>
+            <span class="field-value" th:text="${student.id}" style="font-family:monospace; font-size:0.85rem;"></span>
+        </div>
+        <div class="field">
+            <span class="field-label">Name</span>
+            <span class="field-value" th:text="${student.name}"></span>
+        </div>
+        <div class="field">
+            <span class="field-label">Email</span>
+            <span class="field-value" th:text="${student.email}"></span>
+        </div>
+        <div class="field">
+            <span class="field-label">Age</span>
+            <span class="field-value" th:text="${student.age}"></span>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a th:href="@{/students/{id}/edit(id=${student.id})}" class="btn btn-primary">Edit</a>
+        <form th:action="@{/students/{id}/delete(id=${student.id})}" method="post" style="display:inline;">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this student?')">Delete</button>
+        </form>
+        <a th:href="@{/students}" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+</body>
+</html>

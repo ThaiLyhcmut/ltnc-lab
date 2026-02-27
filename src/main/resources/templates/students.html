@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
+        .container { max-width: 960px; margin: 0 auto; padding: 2rem 1rem; }
+        h1 { font-size: 1.6rem; margin-bottom: 1.5rem; }
+
+        /* Toolbar */
+        .toolbar { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+        .toolbar .search-box { flex: 1; min-width: 200px; }
+        .toolbar .search-box input { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; }
+        .toolbar .search-box input:focus { outline: none; border-color: #4CAF50; }
+
+        .btn { display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; border: none; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-decoration: none; color: #fff; transition: opacity .15s; }
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: #4CAF50; }
+        .btn-danger { background: #e53935; }
+        .btn-secondary { background: #888; }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+
+        /* Table */
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #fafafa; }
+        th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th { font-weight: 600; user-select: none; }
+        th a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+        th a:hover { color: #4CAF50; }
+        .sort-icon { font-size: 0.7rem; }
+        tr:hover td { background: #f9f9f9; }
+        .empty-row td { text-align: center; color: #999; padding: 2rem; }
+
+        input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+
+        .row-actions { display: flex; gap: 6px; }
+        .row-actions a { padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; border: 1px solid #ddd; background: #fff; color: #333; cursor: pointer; text-decoration: none; transition: all .15s; }
+        .row-actions a:hover { background: #4CAF50; color: #fff; border-color: #4CAF50; }
+
+        /* Bulk bar */
+        .bulk-bar { display: none; align-items: center; gap: 0.75rem; padding: 10px 14px; background: #fff3e0; border-radius: 6px; margin-bottom: 0.75rem; font-size: 0.9rem; }
+        .bulk-bar.show { display: flex; }
+
+        /* Footer */
+        .table-footer { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 0.85rem; color: #666; border-top: 1px solid #eee; background: #fafafa; flex-wrap: wrap; gap: 8px; }
+
+        /* Pagination */
+        .pagination { display: flex; gap: 4px; align-items: center; }
+        .pagination a, .pagination span {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 32px; height: 32px; padding: 0 8px;
+            border: 1px solid #ddd; border-radius: 4px;
+            text-decoration: none; color: #333; font-size: 0.85rem;
+            transition: all .15s;
+        }
+        .pagination a:hover { background: #4CAF50; color: #fff; border-color: #4CAF50; }
+        .pagination .active { background: #4CAF50; color: #fff; border-color: #4CAF50; font-weight: 600; }
+        .pagination .disabled { color: #ccc; pointer-events: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Student Management</h1>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-box">
+            <form th:action="@{/students}" method="get" style="display:flex; gap:6px;">
+                <input type="hidden" name="sortBy" th:value="${sortBy}">
+                <input type="hidden" name="order" th:value="${order}">
+                <input type="text" name="search" placeholder="Search by name or email..." th:value="${search}">
+                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                <a th:href="@{/students}" class="btn btn-secondary btn-sm">Clear</a>
+            </form>
+        </div>
+        <a th:href="@{/students/new}" class="btn btn-primary">+ Add Student</a>
+    </div>
+
+    <!-- Bulk bar -->
+    <div class="bulk-bar" id="bulkBar">
+        <span><strong id="selectedCount">0</strong> selected</span>
+        <button type="button" class="btn btn-danger btn-sm" onclick="submitBulkDelete()">Delete Selected</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="clearSelection()">Cancel</button>
+    </div>
+
+    <!-- Table -->
+    <form id="bulkForm" th:action="@{/students/delete-many}" method="post">
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:40px;">
+                        <input type="checkbox" id="selectAll" onclick="toggleAll(this)">
+                    </th>
+                    <th>
+                        <a th:href="@{/students(search=${search}, sortBy='name', order=${sortBy == 'name' && order == 'asc'} ? 'desc' : 'asc', page=${currentPage})}">
+                            Name <span class="sort-icon" th:if="${sortBy == 'name'}" th:text="${order == 'asc'} ? '&#9650;' : '&#9660;'"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a th:href="@{/students(search=${search}, sortBy='email', order=${sortBy == 'email' && order == 'asc'} ? 'desc' : 'asc', page=${currentPage})}">
+                            Email <span class="sort-icon" th:if="${sortBy == 'email'}" th:text="${order == 'asc'} ? '&#9650;' : '&#9660;'"></span>
+                        </a>
+                    </th>
+                    <th style="width:80px;">
+                        <a th:href="@{/students(search=${search}, sortBy='age', order=${sortBy == 'age' && order == 'asc'} ? 'desc' : 'asc', page=${currentPage})}">
+                            Age <span class="sort-icon" th:if="${sortBy == 'age'}" th:text="${order == 'asc'} ? '&#9650;' : '&#9660;'"></span>
+                        </a>
+                    </th>
+                    <th style="width:140px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="student : ${students}">
+                    <td><input type="checkbox" name="ids" th:value="${student.id}" class="row-check" onclick="updateBulkBar()"></td>
+                    <td><a th:href="@{/students/{id}(id=${student.id})}" th:text="${student.name}" style="color:#333;font-weight:500;"></a></td>
+                    <td th:text="${student.email}"></td>
+                    <td th:text="${student.age}"></td>
+                    <td>
+                        <div class="row-actions">
+                            <a th:href="@{/students/{id}(id=${student.id})}">View</a>
+                            <a th:href="@{/students/{id}/edit(id=${student.id})}">Edit</a>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(students)}" class="empty-row">
+                    <td colspan="5">No students found.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="table-footer">
+            <span>Total: <strong th:text="${totalItems}">0</strong> student(s)</span>
+
+            <div class="pagination" th:if="${totalPages > 1}">
+                <!-- Prev -->
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/students(search=${search}, sortBy=${sortBy}, order=${order}, page=${currentPage - 1})}">Prev</a>
+                <span th:if="${currentPage == 0}" class="disabled">Prev</span>
+
+                <!-- Page numbers -->
+                <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                    <span th:if="${i == currentPage}" class="active" th:text="${i + 1}"></span>
+                    <a th:if="${i != currentPage}"
+                       th:href="@{/students(search=${search}, sortBy=${sortBy}, order=${order}, page=${i})}"
+                       th:text="${i + 1}"></a>
+                </th:block>
+
+                <!-- Next -->
+                <a th:if="${currentPage < totalPages - 1}"
+                   th:href="@{/students(search=${search}, sortBy=${sortBy}, order=${order}, page=${currentPage + 1})}">Next</a>
+                <span th:if="${currentPage >= totalPages - 1}" class="disabled">Next</span>
+            </div>
+        </div>
+    </div>
+    </form>
+</div>
+
+<script>
+function toggleAll(master) {
+    document.querySelectorAll('.row-check').forEach(cb => cb.checked = master.checked);
+    updateBulkBar();
+}
+function updateBulkBar() {
+    const checked = document.querySelectorAll('.row-check:checked');
+    document.getElementById('selectedCount').textContent = checked.length;
+    document.getElementById('bulkBar').classList.toggle('show', checked.length > 0);
+    document.getElementById('selectAll').checked =
+        checked.length === document.querySelectorAll('.row-check').length && checked.length > 0;
+}
+function clearSelection() {
+    document.querySelectorAll('.row-check').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateBulkBar();
+}
+function submitBulkDelete() {
+    const count = document.querySelectorAll('.row-check:checked').length;
+    if (confirm('Delete ' + count + ' student(s)?')) {
+        document.getElementById('bulkForm').submit();
+    }
+}
+</script>
+</body>
+</html>
