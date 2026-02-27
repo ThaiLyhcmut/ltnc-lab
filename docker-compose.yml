@@ -35,16 +35,6 @@ services:
       db:
         condition: service_healthy
 
-  tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: tk_tunnel
-    restart: unless-stopped
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    command: tunnel --no-autoupdate run --protocol http2
-    networks:
-      - app-network
-
 volumes:
   postgres_data:
 

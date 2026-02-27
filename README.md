@@ -53,14 +53,9 @@ Chỉ cần Java 21, không cần database. Dữ liệu lưu file `students.db`.
 
 ```bash
 # Cho Docker Compose
-POSTGRES_USER=thaily
+POSTGRES_USER=your_user
 POSTGRES_PASSWORD=your_password
-POSTGRES_DB=mydb
-
-# Cho Local + PostgreSQL (thêm nếu chạy cách 2)
-DB_URL=jdbc:postgresql://localhost:5432/mydb
-DB_USERNAME=thaily
-DB_PASSWORD=your_password
+POSTGRES_DB=your_db
 ```
 
 ## Truy cập
@@ -84,3 +79,24 @@ Push lên `main` -> GitHub Actions tự build & push image `thaily/ltnc-lab:late
 Thêm 2 secrets trong GitHub repo (**Settings > Secrets > Actions**):
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
+
+## Cloudflare Tunnel (tuỳ chọn)
+
+Nếu muốn expose app ra internet qua Cloudflare Tunnel, thêm service sau vào `docker-compose.yml`:
+
+```yaml
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: ltnc_tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --protocol http2 --token ${TUNNEL_TOKEN}
+    env_file: .env
+    networks:
+      - app-network
+```
+
+Và thêm vào `.env`:
+
+```bash
+TUNNEL_TOKEN=your_tunnel_token
+```
