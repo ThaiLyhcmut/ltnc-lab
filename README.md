@@ -5,34 +5,24 @@ Spring Boot web application for managing students with full CRUD, search, pagina
 ## Tech Stack
 
 - Java 21, Spring Boot 3.5
-- Spring Data JPA, Thymeleaf
-- PostgreSQL (production) / SQLite (local dev)
+- Spring Data JPA, Thymeleaf, PostgreSQL
 - Swagger UI (SpringDoc OpenAPI)
 - Docker, Docker Compose, GitHub Actions CI/CD
 
-## Quick Start (Docker Compose)
+## How to Run
 
 ```bash
-# 1. Copy env file and fill in your credentials
+# 1. Copy env file and fill in your PostgreSQL credentials
 cp .env.example .env
 
-# 2. Run
+# 2. Start (PostgreSQL + App)
 docker compose up -d
+
+# 3. Stop
+docker compose down
 ```
 
-App will be available after PostgreSQL is healthy (~10s).
-
-## Local Development
-
-```bash
-# Run with SQLite (no database setup needed)
-./mvnw spring-boot:run
-
-# Run with PostgreSQL
-cp .env.example .env   # edit credentials
-set -a && source .env && set +a
-./mvnw spring-boot:run
-```
+App starts after PostgreSQL is healthy (~10s).
 
 ## URLs
 
@@ -69,20 +59,13 @@ curl http://localhost:8080/api/students
 curl "http://localhost:8080/api/students/search?keyword=gmail"
 ```
 
-## Environment Variables
+## Environment Variables (.env)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `POSTGRES_USER` | PostgreSQL username | - |
-| `POSTGRES_PASSWORD` | PostgreSQL password | - |
-| `POSTGRES_DB` | PostgreSQL database name | - |
-| `DB_URL` | JDBC connection URL | `jdbc:sqlite:students.db` |
-| `DB_DRIVER` | JDBC driver class | `org.sqlite.JDBC` |
-| `DB_DIALECT` | Hibernate dialect | `SQLiteDialect` |
-| `DB_USERNAME` | Database username | (empty) |
-| `DB_PASSWORD` | Database password | (empty) |
-
-> When using `docker-compose.yml`, only `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` are needed in `.env`. The rest are set automatically.
+```
+POSTGRES_USER=your_user
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=your_db
+```
 
 ## CI/CD
 
