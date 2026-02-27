@@ -1,102 +1,86 @@
 # Student Management System
 
-Spring Boot web application for managing students with full CRUD, search, pagination, and REST API.
+Web application quản lý sinh viên: thêm, sửa, xóa, xem chi tiết, tìm kiếm, phân trang, xóa nhiều.
 
-## Tech Stack
+## Features
 
-- Java 21, Spring Boot 3.5
-- Spring Data JPA, Thymeleaf, PostgreSQL
-- Swagger UI (SpringDoc OpenAPI)
-- Docker, Docker Compose, GitHub Actions CI/CD
+- CRUD sinh viên (tên, email, tuổi)
+- Tìm kiếm theo tên hoặc email
+- Sắp xếp theo cột (Name, Email, Age)
+- Phân trang (20 sinh viên/trang)
+- Chọn nhiều & xóa hàng loạt
+- Validation: email hợp lệ, email không trùng, tên bắt buộc, tuổi 1-150
+- REST API + Swagger UI
+- Seed 30 sinh viên mẫu khi database trống
 
-## How to Run
+## Cách chạy
+
+### 1. Docker Compose (khuyên dùng)
+
+Chạy cả PostgreSQL + App trong Docker, không cần cài gì thêm.
 
 ```bash
-# 1. Copy env file and fill in your PostgreSQL credentials
-cp .env.example .env
-
-# 2. Start (PostgreSQL + App)
-docker compose up -d
-
-# 3. Stop
-docker compose down
+cp .env.example .env   # sửa credentials
+docker compose up -d   # start
+docker compose down    # stop
 ```
 
-App starts after PostgreSQL is healthy (~10s).
+### 2. Local + PostgreSQL
 
-## URLs
+Cần Java 21 + PostgreSQL đang chạy sẵn.
 
-| URL | Description |
-|-----|-------------|
-| http://localhost:8080/students | Web UI - Student list (CRUD, search, sort, pagination) |
-| http://localhost:8080/students/new | Web UI - Add new student |
-| http://localhost:8080/swagger-ui.html | Swagger UI - API documentation & testing |
-| http://localhost:8080/api/students | REST API - JSON endpoints |
+```bash
+cp .env.example .env   # sửa credentials
+
+# Sửa .env thêm các dòng:
+# DB_URL=jdbc:postgresql://localhost:5432/mydb
+# DB_USERNAME=thaily
+# DB_PASSWORD=yourpassword
+
+set -a && source .env && set +a
+./mvnw spring-boot:run
+```
+
+### 3. Local không có PostgreSQL (SQLite)
+
+Chỉ cần Java 21, không cần database. Dữ liệu lưu file `students.db`.
+
+```bash
+./mvnw spring-boot:run
+```
+
+## File .env
+
+```bash
+# Cho Docker Compose
+POSTGRES_USER=thaily
+POSTGRES_PASSWORD=your_password
+POSTGRES_DB=mydb
+
+# Cho Local + PostgreSQL (thêm nếu chạy cách 2)
+DB_URL=jdbc:postgresql://localhost:5432/mydb
+DB_USERNAME=thaily
+DB_PASSWORD=your_password
+```
+
+## Truy cập
+
+| URL | Mô tả |
+|-----|-------|
+| http://localhost:8080/students | Danh sách sinh viên (tìm, sắp xếp, phân trang, xóa nhiều) |
+| http://localhost:8080/students/new | Thêm sinh viên mới |
+| http://localhost:8080/students/{id} | Xem chi tiết sinh viên |
+| http://localhost:8080/students/{id}/edit | Sửa sinh viên |
+| http://localhost:8080/swagger-ui.html | Swagger UI - test API trực tiếp trên trình duyệt |
 
 ## REST API
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/students` | List all students |
-| GET | `/api/students/{id}` | Get student by ID |
-| POST | `/api/students` | Create student |
-| PUT | `/api/students/{id}` | Update student |
-| DELETE | `/api/students/{id}` | Delete student |
-| GET | `/api/students/search?keyword=abc` | Search by name or email |
-
-### Example
-
-```bash
-# Create
-curl -X POST http://localhost:8080/api/students \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Nguyen Van A","email":"nva@hcmut.edu.vn","age":20}'
-
-# List
-curl http://localhost:8080/api/students
-
-# Search
-curl "http://localhost:8080/api/students/search?keyword=gmail"
-```
-
-## Environment Variables (.env)
-
-```
-POSTGRES_USER=your_user
-POSTGRES_PASSWORD=your_password
-POSTGRES_DB=your_db
-```
+Chi tiết đầy đủ tất cả endpoints, parameters, request/response xem tại **Swagger UI**: http://localhost:8080/swagger-ui.html
 
 ## CI/CD
 
-GitHub Actions automatically builds and pushes Docker image on push to `main`.
+Push lên `main` -> GitHub Actions tự build & push image `thaily/ltnc-lab:latest` lên DockerHub.
 
-**Image:** `thaily/ltnc-lab:latest`
-
-### Setup
-
-Add these secrets in GitHub repo settings (**Settings > Secrets and variables > Actions**):
-
+Thêm 2 secrets trong GitHub repo (**Settings > Secrets > Actions**):
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
-
-## Project Structure
-
-```
-src/main/java/vn/edu/hcmut/cse/adse/lab/
-├── StudentManagementApplication.java
-├── DataSeeder.java
-├── entity/Student.java
-├── repository/StudentRepository.java
-├── service/StudentService.java
-└── controller/
-    ├── StudentController.java      (REST API)
-    └── StudentWebController.java   (Web UI)
-
-src/main/resources/
-├── application.properties
-└── templates/
-    ├── students.html          (list + search + pagination)
-    ├── student-detail.html    (detail view)
-    └── student-form.html      (add/edit form)
-```
