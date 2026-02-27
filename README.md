@@ -2,6 +2,16 @@
 
 Web application quản lý sinh viên: thêm, sửa, xóa, xem chi tiết, tìm kiếm, phân trang, xóa nhiều.
 
+## Thông tin nhóm
+
+| MSSV | Họ tên |
+|------|--------|
+| 2213104 | Lý Vĩnh Thái |
+
+## Public URL
+
+> https://ltnc.thaily.id.vn
+
 ## Features
 
 - CRUD sinh viên (tên, email, tuổi)
@@ -52,7 +62,6 @@ Chỉ cần Java 21, không cần database. Dữ liệu lưu file `students.db`.
 ## File .env
 
 ```bash
-# Cho Docker Compose
 POSTGRES_USER=your_user
 POSTGRES_PASSWORD=your_password
 POSTGRES_DB=your_db
@@ -100,3 +109,34 @@ Và thêm vào `.env`:
 ```bash
 TUNNEL_TOKEN=your_tunnel_token
 ```
+
+## Câu hỏi lý thuyết (Lab 1)
+
+### Bài 2: Ràng buộc Khóa Chính – "Tại sao Database lại chặn thao tác này?"
+
+Khi insert một student với `id` đã tồn tại, database trả lỗi `UNIQUE constraint failed` vì cột `id` là **Primary Key**. Primary Key đảm bảo mỗi dòng trong bảng có giá trị duy nhất — nếu cho phép trùng thì không thể phân biệt được các bản ghi, dẫn đến sai lệch khi truy vấn, cập nhật, xóa.
+
+### Bài 3: Toàn vẹn dữ liệu – "Database có báo lỗi không? Sự thiếu chặt chẽ này ảnh hưởng gì khi code Java đọc dữ liệu lên?"
+
+SQLite **không báo lỗi** khi insert giá trị NULL vào cột `name` vì mặc định SQLite không ép NOT NULL constraint. Khi Java đọc dữ liệu lên, các field String sẽ nhận giá trị `null`, dễ gây **NullPointerException** nếu code không kiểm tra. Đây là lý do cần thêm annotation `@NotBlank` / `@NotNull` ở tầng Entity và validation ở tầng Controller để đảm bảo toàn vẹn dữ liệu từ đầu vào.
+
+### Bài 4: Cấu hình Hibernate – "Tại sao mỗi lần tắt ứng dụng và chạy lại, dữ liệu cũ trong Database lại bị mất hết?"
+
+Vì cấu hình `spring.jpa.hibernate.ddl-auto=create`. Giá trị `create` khiến Hibernate **xóa toàn bộ bảng và tạo lại** mỗi lần khởi động app, nên dữ liệu cũ bị mất. Để giữ dữ liệu, dùng `ddl-auto=update` (chỉ thêm cột/bảng mới, không xóa dữ liệu) hoặc `ddl-auto=validate` (chỉ kiểm tra schema, không thay đổi gì).
+
+## Screenshots (Lab 4)
+
+### Danh sách sinh viên (search, sort, pagination, bulk delete)
+![Student List](screenshots/student-list.png)
+
+### Thêm sinh viên mới
+![Add Student](screenshots/student-add.png)
+
+### Chi tiết sinh viên
+![Student Detail](screenshots/student-detail.png)
+
+### Sửa sinh viên
+![Edit Student](screenshots/student-edit.png)
+
+### Swagger UI
+![Swagger UI](screenshots/swagger-ui.png)
