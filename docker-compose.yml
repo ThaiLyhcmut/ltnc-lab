@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -27,9 +29,24 @@ services:
       DB_DIALECT: org.hibernate.dialect.PostgreSQLDialect
       DB_USERNAME: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - app-network
     depends_on:
       db:
         condition: service_healthy
 
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: tk_tunnel
+    restart: unless-stopped
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    command: tunnel --no-autoupdate run --protocol http2
+    networks:
+      - app-network
+
 volumes:
   postgres_data:
+
+networks:
+  app-network:
